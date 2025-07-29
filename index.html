@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niveau d'Eau - Port des Sablons</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            /* Image de fond du port avec flou léger */
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                url('src/Sablon_easy_ride.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            backdrop-filter: blur(1px);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('src/Sablon_easy_ride.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(12px);
+            z-index: -1;
+        }
+
+        /* Sélecteur de langue */
+        .language-selector {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            border-radius: 8px;
+            padding: 8px 12px;
+            z-index: 1000;
+        }
+
+        .language-selector a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: normal;
+            padding: 5px 8px;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .language-selector a.active {
+            font-weight: bold;
+            opacity: 1;
+            color: #ffffff;
+        }
+
+        .language-selector a:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Styles pour affichage vertical */
+        @media (orientation: portrait) {
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                padding: 20px;
+                max-width: 450px;
+                margin: 0 auto;
+            }
+
+            .header {
+                margin-bottom: 40px;
+                text-align: center;
+                background: #121212;
+                padding: 20px 30px;
+                border-radius: 15px;
+                border: 2px solid #ffffff;
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .logo {
+                height: 80px;
+                width: auto;
+                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+            }
+
+            .main-display {
+                background: #121212;
+                border-radius: 25px;
+                padding: 60px 40px;
+                border: 2px solid #ffffff;
+                box-shadow: 
+                    0 0 20px rgba(255, 255, 255, 0.5),
+                    inset 0 0 20px rgba(0, 188, 212, 0.1);
+                margin-bottom: 40px;
+                width: 100%;
+                max-width: 400px;
+                position: relative;
+            }
+
+            .label {
+                font-size: 1.5rem;
+                color: #ffffff;
+                text-align: center;
+                margin-bottom: 20px;
+                font-weight: bold;
+            }
+
+            .water-level {
+                font-size: 5.5rem;
+                font-weight: bold;
+                color: #ffffff;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+                margin-bottom: 15px;
+                font-family: 'Courier New', monospace;
+                text-align: center;
+            }
+
+            .unit {
+                font-size: 1.8rem;
+                color: #ffffff;
+                opacity: 0.9;
+                font-weight: 300;
+                text-align: center;
+            }
+
+            .info-panel {
+                background: #121212;
+                padding: 25px;
+                border-radius: 15px;
+                border: 1px solid #ffffff;
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .timestamp {
+                font-size: 1.3rem;
+                opacity: 0.9;
+                margin-bottom: 20px;
+                text-align: center;
+                color: #ffffff;
+            }
+
+            .status {
+                padding: 15px 30px;
+                background: rgba(76, 175, 80, 0.2);
+                border-radius: 25px;
+                border: 1px solid #4caf50;
+                text-align: center;
+                font-weight: 500;
+            }
+        }
+
+        /* Styles pour affichage horizontal */
+        @media (orientation: landscape) {
+            .container {
+                display: grid;
+                grid-template-columns: 1fr 2fr 1fr;
+                height: 100vh;
+                padding: 20px;
+                gap: 30px;
+                align-items: center;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .header {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: left;
+                background: #121212;
+                padding: 25px;
+                border-radius: 15px;
+                border: 2px solid #ffffff;
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+                max-width: 300px;
+                justify-self: center;
+            }
+
+            .logo {
+                height: 60px;
+                width: auto;
+                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+            }
+
+            .main-display {
+                background: #121212;
+                border-radius: 25px;
+                padding: 40px;
+                border: 2px solid #ffffff;
+                box-shadow: 
+                    0 0 20px rgba(255, 255, 255, 0.5),
+                    inset 0 0 20px rgba(0, 188, 212, 0.1);
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                position: relative;
+                max-width: 500px;
+                justify-self: center;
+            }
+
+            .label {
+                font-size: 1.5rem;
+                color: #ffffff;
+                text-align: center;
+                margin-bottom: 20px;
+                font-weight: bold;
+            }
+
+            .water-level {
+                font-size: 4.5rem;
+                font-weight: bold;
+                color: #ffffff;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+                margin-bottom: 15px;
+                font-family: 'Courier New', monospace;
+            }
+
+            .unit {
+                font-size: 1.4rem;
+                color: #ffffff;
+                opacity: 0.9;
+                font-weight: 300;
+            }
+
+            .info-panel {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                text-align: right;
+                background: #121212;
+                padding: 25px;
+                border-radius: 15px;
+                border: 1px solid #ffffff;
+                max-width: 300px;
+                justify-self: center;
+            }
+
+            .timestamp {
+                font-size: 1.1rem;
+                opacity: 0.9;
+                margin-bottom: 20px;
+                color: #ffffff;
+            }
+
+            .status {
+                padding: 12px 24px;
+                background: rgba(76, 175, 80, 0.2);
+                border-radius: 20px;
+                border: 1px solid #4caf50;
+                text-align: center;
+                font-weight: 500;
+            }
+        }
+
+        /* Pour les très grands écrans */
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1400px;
+            }
+            
+            .header {
+                max-width: 350px;
+            }
+            
+            .main-display {
+                max-width: 600px;
+            }
+            
+            .info-panel {
+                max-width: 350px;
+            }
+        }
+
+        .loading {
+            opacity: 0.5;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        .error {
+            color: #ff5252;
+            background: rgba(255, 82, 82, 0.2);
+            border: 1px solid #ff5252;
+            box-shadow: 0 0 15px rgba(255, 82, 82, 0.3);
+        }
+
+        /* Animation d'apparition */
+        .fade-in {
+            animation: fadeIn 1.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container fade-in">
+        <div class="header">
+            <img src="src/logo_bretagneplaisance.svg" alt="Bretagne Plaisance" class="logo">
+        </div>
+
+        <div class="main-display">
+            <div class="label" id="waterLevelLabel">Hauteur d'eau sur le seuil</div>
+            <div class="water-level" id="waterLevel">--,--</div>
+            <div class="unit" id="unit">mètres</div>
+        </div>
+
+        <div class="info-panel">
+            <div class="timestamp" id="timestamp">Mise à jour : --:--</div>
+            <div class="status" id="status">
+                <span>🟢 Système actif</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sélecteur de langue -->
+    <div class="language-selector">
+        <a href="#" id="frLink" class="active" onclick="changeLanguage('fr')">FR</a>
+        <span style="color: rgb(255, 255, 255); margin: 0 5px;">|</span>
+        <a href="#" id="enLink" onclick="changeLanguage('en')">EN</a>
+    </div>
+
+    <script>
+        // Traductions
+        const translations = {
+            fr: {
+                title: "Niveau d'Eau - Port des Sablons",
+                waterLevelLabel: "Hauteur d'eau sur le seuil",
+                unit: "mètres",
+                lastUpdate: "Mise à jour :",
+                systemActive: "🟢 Système actif",
+                connectionError: "🔴 Erreur connexion",
+                dataUnavailable: "Données indisponibles",
+                error: "ERREUR"
+            },
+            en: {
+                title: "Water Level - Port des Sablons",
+                waterLevelLabel: "Water level on the threshold",
+                unit: "meters",
+                lastUpdate: "Last update:",
+                systemActive: "🟢 System active",
+                connectionError: "🔴 Connection error",
+                dataUnavailable: "Data unavailable",
+                error: "ERROR"
+            }
+        };
+
+        let currentLanguage = 'fr';
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Mettre à jour le titre de la page
+            document.title = translations[currentLanguage].title;
+
+            // Mettre à jour le texte de l'étiquette
+            document.getElementById('waterLevelLabel').textContent = translations[currentLanguage].waterLevelLabel;
+            
+            // Mettre à jour l'unité
+            document.getElementById('unit').textContent = translations[currentLanguage].unit;
+            
+            // Mettre à jour les classes actives des liens
+            document.getElementById('frLink').classList.toggle('active', lang === 'fr');
+            document.getElementById('enLink').classList.toggle('active', lang === 'en');
+            
+            // Sauvegarder la préférence
+            localStorage.setItem('language', currentLanguage);
+            
+            // Redéclencher l'affichage pour mettre à jour les textes
+            if (window.waterLevelDisplay) {
+                window.waterLevelDisplay.updateDisplayTexts();
+            }
+        }
+
+        // Charger la langue sauvegardée
+        function loadSavedLanguage() {
+            const saved = localStorage.getItem('language');
+            if (saved && translations[saved]) {
+                changeLanguage(saved);
+            }
+        }
+
+        class WaterLevelDisplay {
+            constructor() {
+                this.apiUrl = 'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value';
+                this.updateInterval = 30000; // 30 secondes
+                this.lastData = null;
+                this.init();
+            }
+
+            init() {
+                this.updateDisplay();
+                setInterval(() => this.updateDisplay(), this.updateInterval);
+            }
+
+            async fetchData() {
+                try {
+                    const payload = [
+                        {"hmi_id": 168069, "type": "Float", "name": "NIVEAU_MER"},
+                        {"hmi_id": 168069, "type": "Int", "name": "Jour"},
+                        {"hmi_id": 168069, "type": "Int", "name": "mois"},
+                        {"hmi_id": 168069, "type": "Int", "name": "Annee"},
+                        {"hmi_id": 168069, "type": "Int", "name": "Heure"},
+                        {"hmi_id": 168069, "type": "Int", "name": "Minute"}
+                    ];
+
+                    const response = await fetch(this.apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return this.parseData(data);
+                } catch (error) {
+                    console.error('Erreur lors de la récupération des données:', error);
+                    return null;
+                }
+            }
+
+            parseData(data) {
+                try {
+                    const niveauMer = data.d.find(item => item.name === 'NIVEAU_MER');
+                    const jour = data.d.find(item => item.name === 'Jour');
+                    const mois = data.d.find(item => item.name === 'mois');
+                    const annee = data.d.find(item => item.name === 'Annee');
+                    const heure = data.d.find(item => item.name === 'Heure');
+                    const minute = data.d.find(item => item.name === 'Minute');
+
+                    if (!niveauMer || !jour || !mois || !annee || !heure || !minute) {
+                        throw new Error('Données manquantes dans la réponse API');
+                    }
+
+                    return {
+                        niveau: parseFloat(niveauMer.values[0].value),
+                        date: {
+                            jour: parseInt(jour.values[0].value),
+                            mois: parseInt(mois.values[0].value),
+                            annee: parseInt(annee.values[0].value),
+                            heure: parseInt(heure.values[0].value),
+                            minute: parseInt(minute.values[0].value)
+                        }
+                    };
+                } catch (error) {
+                    console.error('Erreur lors du parsing des données:', error);
+                    return null;
+                }
+            }
+
+            formatTimestamp(date) {
+                return `${date.jour.toString().padStart(2, '0')}/${date.mois.toString().padStart(2, '0')}/${date.annee} à ${date.heure.toString().padStart(2, '0')}h${date.minute.toString().padStart(2, '0')}`;
+            }
+
+            updateDisplayTexts() {
+                const timestampElement = document.getElementById('timestamp');
+                const statusElement = document.getElementById('status');
+                
+                if (this.lastData) {
+                    timestampElement.textContent = `${translations[currentLanguage].lastUpdate} ${this.formatTimestamp(this.lastData.date)}`;
+                    statusElement.innerHTML = `<span>${translations[currentLanguage].systemActive}</span>`;
+                } else {
+                    timestampElement.textContent = translations[currentLanguage].dataUnavailable;
+                    statusElement.innerHTML = `<span>${translations[currentLanguage].connectionError}</span>`;
+                }
+            }
+
+            async updateDisplay() {
+                const waterLevelElement = document.getElementById('waterLevel');
+                const timestampElement = document.getElementById('timestamp');
+                const statusElement = document.getElementById('status');
+
+                // Afficher l'état de chargement
+                waterLevelElement.classList.add('loading');
+                
+                const data = await this.fetchData();
+
+                if (data) {
+                    this.lastData = data;
+                    // Mettre à jour l'affichage avec les nouvelles données
+                    waterLevelElement.textContent = data.niveau.toFixed(2);
+                    timestampElement.textContent = `${translations[currentLanguage].lastUpdate} ${this.formatTimestamp(data.date)}`;
+                    statusElement.innerHTML = `<span>${translations[currentLanguage].systemActive}</span>`;
+                    statusElement.className = 'status';
+                } else {
+                    // Afficher l'erreur
+                    waterLevelElement.textContent = translations[currentLanguage].error;
+                    timestampElement.textContent = translations[currentLanguage].dataUnavailable;
+                    statusElement.innerHTML = `<span>${translations[currentLanguage].connectionError}</span>`;
+                    statusElement.className = 'status error';
+                }
+
+                waterLevelElement.classList.remove('loading');
+            }
+        }
+
+        // Initialiser l'application au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedLanguage();
+            window.waterLevelDisplay = new WaterLevelDisplay();
+
+            // Ajout du switch automatique après 7,5 secondes si la langue est fr
+            setTimeout(() => {
+                if (currentLanguage === 'fr') {
+                    changeLanguage('en');
+                }
+            }, 7500);
+        });
+
+        // Gestion de l'orientation pour les animations
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                document.body.style.height = '100vh';
+            }, 500);
+        });
+    </script>
+</body>
+</html>
