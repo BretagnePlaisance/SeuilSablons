@@ -355,7 +355,7 @@
             },
             en: {
                 title: "Water Level - Port des Sablons",
-                waterLevelLabel: "Water level on the seel",
+                waterLevelLabel: "Water level on the sill",
                 unit: "meters",
                 dataUnavailable: "Data unavailable",
                 error: "ERROR"
@@ -495,11 +495,11 @@
             window.waterLevelDisplay = new WaterLevelDisplay();
 
             // Ajout du switch automatique après 7,5 secondes si la langue est fr
-            setTimeout(() => {
+            setInterval(() => {
                 if (currentLanguage === 'fr') {
                     changeLanguage('en');
                 } else {
-                    changeLanguage('fr')
+                    changeLanguage('fr');
                 }
             }, 7500);
         });
