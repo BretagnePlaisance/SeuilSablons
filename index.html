@@ -334,10 +334,6 @@
             <div class="water-level" id="waterLevel">--,--</div>
             <div class="unit" id="unit">mètres</div>
         </div>
-
-        <div class="info-panel">
-            <div class="timestamp" id="timestamp">Mise à jour : --:--</div>
-        </div>
     </div>
 
     <!-- Sélecteur de langue -->
@@ -354,7 +350,6 @@
                 title: "Niveau d'Eau - Port des Sablons",
                 waterLevelLabel: "Hauteur d'eau au dessus du seuil",
                 unit: "mètres",
-                lastUpdate: "Mise à jour :",
                 dataUnavailable: "Données indisponibles",
                 error: "ERREUR"
             },
@@ -362,7 +357,6 @@
                 title: "Water Level - Port des Sablons",
                 waterLevelLabel: "Water level on the seel",
                 unit: "meters",
-                lastUpdate: "Last update:",
                 dataUnavailable: "Data unavailable",
                 error: "ERROR"
             }
@@ -388,11 +382,7 @@
             
             // Sauvegarder la préférence
             localStorage.setItem('language', currentLanguage);
-            
-            // Redéclencher l'affichage pour mettre à jour les textes
-            if (window.waterLevelDisplay) {
-                window.waterLevelDisplay.updateDisplayTexts();
-            }
+
         }
 
         // Charger la langue sauvegardée
@@ -407,7 +397,6 @@
             constructor() {
                 this.apiUrl = 'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value';
                 this.updateInterval = 30000; // 30 secondes
-                this.lastData = null;
                 this.init();
             }
 
@@ -480,22 +469,8 @@
                 return `${date.jour.toString().padStart(2, '0')}/${date.mois.toString().padStart(2, '0')}/${date.annee} à ${date.heure.toString().padStart(2, '0')}h${date.minute.toString().padStart(2, '0')}`;
             }
 
-            updateDisplayTexts() {
-                const timestampElement = document.getElementById('timestamp');
-                const statusElement = document.getElementById('status');
-                
-                if (this.lastData) {
-                    timestampElement.textContent = `${translations[currentLanguage].lastUpdate} ${this.formatTimestamp(this.lastData.date)}`;
-                    statusElement.innerHTML = `<span>${translations[currentLanguage].systemActive}</span>`;
-                } else {
-                    timestampElement.textContent = translations[currentLanguage].dataUnavailable;
-                    statusElement.innerHTML = `<span>${translations[currentLanguage].connectionError}</span>`;
-                }
-            }
-
             async updateDisplay() {
                 const waterLevelElement = document.getElementById('waterLevel');
-                const timestampElement = document.getElementById('timestamp');
 
                 // Afficher l'état de chargement
                 waterLevelElement.classList.add('loading');
@@ -503,16 +478,11 @@
                 const data = await this.fetchData();
 
                 if (data) {
-                    this.lastData = data;
                     // Mettre à jour l'affichage avec les nouvelles données
                     waterLevelElement.textContent = data.niveau.toFixed(2);
-                    timestampElement.textContent = `${translations[currentLanguage].lastUpdate} ${this.formatTimestamp(data.date)}`;
-                    statusElement.className = 'status';
                 } else {
                     // Afficher l'erreur
                     waterLevelElement.textContent = translations[currentLanguage].error;
-                    timestampElement.textContent = translations[currentLanguage].dataUnavailable;
-                    statusElement.className = 'status error';
                 }
 
                 waterLevelElement.classList.remove('loading');
