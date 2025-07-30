@@ -330,16 +330,13 @@
         </div>
 
         <div class="main-display">
-            <div class="label" id="waterLevelLabel">Hauteur d'eau sur le seuil</div>
+            <div class="label" id="waterLevelLabel">Hauteur d'eau au dessus du seuil</div>
             <div class="water-level" id="waterLevel">--,--</div>
             <div class="unit" id="unit">mètres</div>
         </div>
 
         <div class="info-panel">
             <div class="timestamp" id="timestamp">Mise à jour : --:--</div>
-            <div class="status" id="status">
-                <span>🟢 Système actif</span>
-            </div>
         </div>
     </div>
 
@@ -355,21 +352,17 @@
         const translations = {
             fr: {
                 title: "Niveau d'Eau - Port des Sablons",
-                waterLevelLabel: "Hauteur d'eau sur le seuil",
+                waterLevelLabel: "Hauteur d'eau au dessus du seuil",
                 unit: "mètres",
                 lastUpdate: "Mise à jour :",
-                systemActive: "🟢 Système actif",
-                connectionError: "🔴 Erreur connexion",
                 dataUnavailable: "Données indisponibles",
                 error: "ERREUR"
             },
             en: {
                 title: "Water Level - Port des Sablons",
-                waterLevelLabel: "Water level on the threshold",
+                waterLevelLabel: "Water level on the seel",
                 unit: "meters",
                 lastUpdate: "Last update:",
-                systemActive: "🟢 System active",
-                connectionError: "🔴 Connection error",
                 dataUnavailable: "Data unavailable",
                 error: "ERROR"
             }
@@ -503,7 +496,6 @@
             async updateDisplay() {
                 const waterLevelElement = document.getElementById('waterLevel');
                 const timestampElement = document.getElementById('timestamp');
-                const statusElement = document.getElementById('status');
 
                 // Afficher l'état de chargement
                 waterLevelElement.classList.add('loading');
@@ -515,13 +507,11 @@
                     // Mettre à jour l'affichage avec les nouvelles données
                     waterLevelElement.textContent = data.niveau.toFixed(2);
                     timestampElement.textContent = `${translations[currentLanguage].lastUpdate} ${this.formatTimestamp(data.date)}`;
-                    statusElement.innerHTML = `<span>${translations[currentLanguage].systemActive}</span>`;
                     statusElement.className = 'status';
                 } else {
                     // Afficher l'erreur
                     waterLevelElement.textContent = translations[currentLanguage].error;
                     timestampElement.textContent = translations[currentLanguage].dataUnavailable;
-                    statusElement.innerHTML = `<span>${translations[currentLanguage].connectionError}</span>`;
                     statusElement.className = 'status error';
                 }
 
