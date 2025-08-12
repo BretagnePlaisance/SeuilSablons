@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Niveau d'Eau - Port des Sablons</title>
     <style>
+        /* Font */
+        @font-face {
+            font-family: 'RegionBretagneNew';
+            src: url('src/RegionBretagneNew-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,12 +21,12 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'RegionBretagneNew', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0a0a;
             /* Image de fond du port avec flou léger */
             background-image: 
                 linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-                url('src/Sablon_easy_ride.jpg');
+                url('src/AdobeStock_527596924.jpeg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -34,10 +43,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('src/Sablon_easy_ride.jpg');
+            background-image: url('src/AdobeStock_527596924.jpeg');
             background-size: cover;
             background-position: center;
-            filter: blur(12px);
             z-index: -1;
         }
 
@@ -72,39 +80,96 @@
             border-radius: 4px;
         }
 
+        /* New: base hidden wave header (enabled in portrait) */
+        .wave-header {
+            display: none;
+        }
+        .wave-header .wave-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 16px 24px 0;
+        }
+        .wave-header .logo {
+            height: 100px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+        .wave-header .wave {
+            position: absolute;
+            left: 0;
+            bottom: -50px;
+            width: 100%;
+            height: 60px;
+        }
+
+        /* New: inclined corner wave (landscape only) */
+        .corner-wave {
+            display: none;
+        }
+        .corner-wave,
+        .corner-wave svg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 450px;
+            height: 240px;
+        }
+        .corner-wave {
+            z-index: 10;
+            pointer-events: none;
+        }
+        .corner-wave .corner-content {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 18px 20px;
+        }
+        .corner-wave .corner-content .logo {
+            height: 90px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+            transform-origin: left top;
+        }
+
         /* Styles pour affichage vertical */
         @media (orientation: portrait) {
+            :root {
+                --wave-height: 140px;
+            }
+
+            /* Show the wave header in portrait */
+            .wave-header {
+                display: block;
+                position: relative;
+                width: 100%;
+                height: var(--wave-height);
+                background: #121212;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+            }
+
+            /* Adjust container height to account for the wave header */
             .container {
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
+                height: calc(100vh - var(--wave-height));
                 padding: 20px;
                 max-width: 450px;
                 margin: 0 auto;
             }
 
+            /* Hide the old card header in portrait */
             .header {
-                margin-bottom: 40px;
-                text-align: center;
-                background: #121212;
-                padding: 20px 30px;
-                border-radius: 15px;
-                border: 2px solid #ffffff;
-                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-                width: 100%;
-                max-width: 400px;
-            }
-
-            .logo {
-                height: 80px;
-                width: auto;
-                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+                display: none !important;
             }
 
             .main-display {
-                background: #121212;
+                background: #121212e0;
                 border-radius: 25px;
                 padding: 60px 40px;
                 border: 2px solid #ffffff;
@@ -112,8 +177,8 @@
                     0 0 20px rgba(255, 255, 255, 0.5),
                     inset 0 0 20px rgba(0, 188, 212, 0.1);
                 margin-bottom: 40px;
-                width: 100%;
-                max-width: 400px;
+                width: 500px;
+                max-width: 500px;
                 position: relative;
             }
 
@@ -131,7 +196,7 @@
                 color: #ffffff;
                 text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
                 margin-bottom: 15px;
-                font-family: 'Courier New', monospace;
+                font-family: 'RegionBretagneNew';
                 text-align: center;
             }
 
@@ -172,40 +237,27 @@
 
         /* Styles pour affichage horizontal */
         @media (orientation: landscape) {
+            /* Show corner wave in landscape */
+            .corner-wave { display: block; }
+
+            /* Hide the old card header in landscape */
+            .header { display: none !important; }
+
+            /* Simplify grid to keep main panel centered */
             .container {
                 display: grid;
-                grid-template-columns: 1fr 2fr 1fr;
+                grid-template-columns: 1fr;
                 height: 100vh;
                 padding: 20px;
                 gap: 30px;
                 align-items: center;
+                justify-items: center;
                 max-width: 1200px;
                 margin: 0 auto;
             }
 
-            .header {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                text-align: left;
-                background: #121212;
-                padding: 25px;
-                border-radius: 15px;
-                border: 2px solid #ffffff;
-                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-                max-width: 300px;
-                justify-self: center;
-            }
-
-            .logo {
-                height: 60px;
-                width: auto;
-                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-            }
-
             .main-display {
-                background: #121212;
+                background: #121212e0;
                 border-radius: 25px;
                 padding: 40px;
                 border: 2px solid #ffffff;
@@ -217,6 +269,7 @@
                 flex-direction: column;
                 justify-content: center;
                 position: relative;
+                width: 500px;
                 max-width: 500px;
                 justify-self: center;
             }
@@ -235,7 +288,7 @@
                 color: #ffffff;
                 text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
                 margin-bottom: 15px;
-                font-family: 'Courier New', monospace;
+                font-family: 'RegionBretagneNew';
             }
 
             .unit {
@@ -324,7 +377,29 @@
     </style>
 </head>
 <body>
+    <!-- New: inclined corner wave with logo for landscape -->
+    <div class="corner-wave" aria-hidden="true">
+        <svg viewBox="0 0 340 240" preserveAspectRatio="none">
+            <path fill="#121212" d="M0,0 L340,0 C300,60 250,75 200,105 C145,138 85,180 0,240 Z"></path>
+        </svg>
+        <div class="corner-content">
+            <img src="src/logo_bretagneplaisance.svg" alt="Bretagne Plaisance" class="logo">
+        </div>
+    </div>
+
+    <!-- New: wave-shaped header for portrait -->
+    <section class="wave-header">
+        <div class="wave-content">
+            <img src="src/logo_bretagneplaisance.svg" alt="Bretagne Plaisance" class="logo">
+        </div>
+        <!-- Wavy bottom edge -->
+        <svg class="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+            <path fill="#121212" d="M0,40 C180,90 360,10 540,40 C720,70 900,120 1080,90 C1260,60 1440,35 1440,35 L1440,0 L0,0 Z"></path>
+        </svg>
+    </section>
+
     <div class="container fade-in">
+        <!-- Old header kept for code history, now hidden in landscape by CSS -->
         <div class="header">
             <img src="src/logo_bretagneplaisance.svg" alt="Bretagne Plaisance" class="logo">
         </div>
