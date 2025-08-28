@@ -135,6 +135,16 @@
             transform-origin: left top;
         }
 
+        .status.rising {
+        }
+
+        .status.falling {
+        }
+
+        .status.stable {
+        }
+
+
         /* Styles pour affichage vertical */
         @media (orientation: portrait) {
             :root {
@@ -190,6 +200,12 @@
                 font-weight: bold;
             }
 
+            .level {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+            }
+
             .water-level {
                 font-size: 5.5rem;
                 font-weight: bold;
@@ -227,9 +243,7 @@
 
             .status {
                 padding: 15px 30px;
-                background: rgba(76, 175, 80, 0.2);
-                border-radius: 25px;
-                border: 1px solid #4caf50;
+                color: #ffffff;
                 text-align: center;
                 font-weight: 500;
             }
@@ -282,6 +296,12 @@
                 font-weight: bold;
             }
 
+            .level {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+            }
+
             .water-level {
                 font-size: 4.5rem;
                 font-weight: bold;
@@ -320,9 +340,7 @@
 
             .status {
                 padding: 12px 24px;
-                background: rgba(76, 175, 80, 0.2);
-                border-radius: 20px;
-                border: 1px solid #4caf50;
+                color: #ffffff;
                 text-align: center;
                 font-weight: 500;
             }
@@ -406,7 +424,9 @@
 
         <div class="main-display">
             <div class="label" id="waterLevelLabel">Hauteur d'eau au dessus du seuil</div>
-            <div class="water-level" id="waterLevel">--,--</div>
+            <div class="level">
+                <div class="water-level" id="waterLevel">--,--</div>
+            </div>
             <div class="unit" id="unit">mètres</div>
         </div>
     </div>
@@ -468,101 +488,176 @@
             }
         }
 
-        class WaterLevelDisplay {
-            constructor() {
-                this.apiUrl = 'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value';
-                this.updateInterval = 30000; // 30 secondes
-                this.init();
-            }
-
-            init() {
-                this.updateDisplay();
-                setInterval(() => this.updateDisplay(), this.updateInterval);
-            }
-
-            async fetchData() {
-                try {
-                    const payload = [
-                        {"hmi_id": 168069, "type": "Float", "name": "NIVEAU_MER"},
-                        {"hmi_id": 168069, "type": "Int", "name": "Jour"},
-                        {"hmi_id": 168069, "type": "Int", "name": "mois"},
-                        {"hmi_id": 168069, "type": "Int", "name": "Annee"},
-                        {"hmi_id": 168069, "type": "Int", "name": "Heure"},
-                        {"hmi_id": 168069, "type": "Int", "name": "Minute"}
-                    ];
-
-                    const response = await fetch(this.apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    return this.parseData(data);
-                } catch (error) {
-                    console.error('Erreur lors de la récupération des données:', error);
-                    return null;
+            class WaterLevelDisplay {
+                constructor() {
+                    this.apiUrl = 'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value';
+                    this.updateInterval = 30000; // 30 secondes
+                    this.levelHistory = []; // ⬅️ Stocke les derniers niveaux
+                    this.maxHistoryLength = 20; // ⬅️ Augmenté à 20 points pour plus de précision
+                    this.init();
                 }
-            }
 
-            parseData(data) {
-                try {
-                    const niveauMer = data.d.find(item => item.name === 'NIVEAU_MER');
-                    const jour = data.d.find(item => item.name === 'Jour');
-                    const mois = data.d.find(item => item.name === 'mois');
-                    const annee = data.d.find(item => item.name === 'Annee');
-                    const heure = data.d.find(item => item.name === 'Heure');
-                    const minute = data.d.find(item => item.name === 'Minute');
+                init() {
+                    this.updateDisplay();
+                    setInterval(() => this.updateDisplay(), this.updateInterval);
+                }
 
-                    if (!niveauMer || !jour || !mois || !annee || !heure || !minute) {
-                        throw new Error('Données manquantes dans la réponse API');
-                    }
+                async fetchData() {
+                    try {
+                        const payload = [
+                            {"hmi_id": 168069, "type": "Float", "name": "NIVEAU_MER"},
+                            {"hmi_id": 168069, "type": "Int", "name": "Jour"},
+                            {"hmi_id": 168069, "type": "Int", "name": "mois"},
+                            {"hmi_id": 168069, "type": "Int", "name": "Annee"},
+                            {"hmi_id": 168069, "type": "Int", "name": "Heure"},
+                            {"hmi_id": 168069, "type": "Int", "name": "Minute"}
+                        ];
 
-                    return {
-                        niveau: parseFloat(niveauMer.values[0].value),
-                        date: {
-                            jour: parseInt(jour.values[0].value),
-                            mois: parseInt(mois.values[0].value),
-                            annee: parseInt(annee.values[0].value),
-                            heure: parseInt(heure.values[0].value),
-                            minute: parseInt(minute.values[0].value)
+                        const response = await fetch(this.apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
                         }
-                    };
-                } catch (error) {
-                    console.error('Erreur lors du parsing des données:', error);
-                    return null;
-                }
-            }
 
-            formatTimestamp(date) {
-                return `${date.jour.toString().padStart(2, '0')}/${date.mois.toString().padStart(2, '0')}/${date.annee} à ${date.heure.toString().padStart(2, '0')}h${date.minute.toString().padStart(2, '0')}`;
-            }
-
-            async updateDisplay() {
-                const waterLevelElement = document.getElementById('waterLevel');
-
-                // Afficher l'état de chargement
-                waterLevelElement.classList.add('loading');
-                
-                const data = await this.fetchData();
-
-                if (data) {
-                    // Mettre à jour l'affichage avec les nouvelles données
-                    waterLevelElement.textContent = data.niveau.toFixed(2);
-                } else {
-                    // Afficher l'erreur
-                    waterLevelElement.textContent = translations[currentLanguage].error;
+                        const data = await response.json();
+                        return this.parseData(data);
+                    } catch (error) {
+                        console.error('Erreur lors de la récupération des données:', error);
+                        return null;
+                    }
                 }
 
-                waterLevelElement.classList.remove('loading');
+                parseData(data) {
+                    try {
+                        const niveauMer = data.d.find(item => item.name === 'NIVEAU_MER');
+                        const jour = data.d.find(item => item.name === 'Jour');
+                        const mois = data.d.find(item => item.name === 'mois');
+                        const annee = data.d.find(item => item.name === 'Annee');
+                        const heure = data.d.find(item => item.name === 'Heure');
+                        const minute = data.d.find(item => item.name === 'Minute');
+
+                        if (!niveauMer || !jour || !mois || !annee || !heure || !minute) {
+                            throw new Error('Données manquantes dans la réponse API');
+                        }
+
+                        return {
+                            niveau: parseFloat(niveauMer.values[0].value),
+                            date: {
+                                jour: parseInt(jour.values[0].value),
+                                mois: parseInt(mois.values[0].value),
+                                annee: parseInt(annee.values[0].value),
+                                heure: parseInt(heure.values[0].value),
+                                minute: parseInt(minute.values[0].value)
+                            }
+                        };
+                    } catch (error) {
+                        console.error('Erreur lors du parsing des données:', error);
+                        return null;
+                    }
+                }
+
+                formatTimestamp(date) {
+                    return `${date.jour.toString().padStart(2, '0')}/${date.mois.toString().padStart(2, '0')}/${date.annee} à ${date.heure.toString().padStart(2, '0')}h${date.minute.toString().padStart(2, '0')}`;
+                }
+
+                analyzeTrend(history) {
+                    if (history.length < 20) return 'stable';  // Attend au moins 20 points
+                    const diff = history[history.length - 1] - history[0];  // Différence entre plus ancienne et plus récente
+                    if (diff > 0.01) return 'rising';
+                    if (diff < -0.01) return 'falling';
+                    return 'stable';
+                }
+
+                getTrendSVG(trend) {
+                    if (trend === 'rising') {
+                        // Flèche montante blanche
+                        return `<svg width="64" height="64" viewBox="0 0 32 32" style="vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 28V6M16 6L8 14M16 6L24 14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>`;
+                    } else if (trend === 'falling') {
+                        // Flèche descendante blanche
+                        return `<svg width="64" height="64" viewBox="0 0 32 32" style="vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 4v22M16 26l8-8M16 26l-8-8" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>`;
+                    } else {
+                        // Flèche horizontale blanche
+                        return `<svg width="64" height="64" viewBox="0 0 32 32" style="vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 16h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M24 16l-4-4M24 16l-4 4" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>`;
+                    }
+                }
+
+                formatLevel(value) {
+                    // Formatage localisé : virgule pour FR, point pour EN
+                    const locale = currentLanguage === 'fr' ? 'fr-FR' : 'en-US';
+                    return value.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+
+                async updateDisplay() {
+                    const waterLevelElement = document.getElementById('waterLevel');
+
+                    waterLevelElement.classList.add('loading');
+                    
+                    const data = await this.fetchData();
+
+                    if (data) {
+                        const exactLevel = data.niveau;
+                        const currentLevel = parseFloat(data.niveau.toFixed(2));
+                        waterLevelElement.textContent = this.formatLevel(currentLevel);  // Formatage appliqué
+
+                        // Met à jour l'historique
+                        this.levelHistory.push(exactLevel);
+                        if (this.levelHistory.length > this.maxHistoryLength) {
+                            this.levelHistory.shift();
+                        }
+
+                        // Debug: Afficher la longueur de l'historique
+                        console.log('Historique longueur:', this.levelHistory.length, 'Valeurs:', this.levelHistory);
+
+                        if (this.levelHistory.length >= 20) {  // Changé à >=20 pour attendre 20 requêtes
+                            const statusElement = this.ensureStatusElement();  // Créé seulement ici
+                            const trend = this.analyzeTrend(this.levelHistory);
+                            statusElement.innerHTML = this.getTrendSVG(trend);
+                            statusElement.className = 'status ' + trend;
+                        }
+                    } else {
+                        waterLevelElement.textContent = translations[currentLanguage].error;
+                    }
+
+                    waterLevelElement.classList.remove('loading');
+                }
+
+                ensureStatusElement() {
+                    let el = document.querySelector('.status');
+                    if (!el) {
+                        const container = document.querySelector('.level');
+                        el = document.createElement('div');
+                        el.className = 'status';
+                        el.textContent = '';
+                        container.appendChild(el);
+                    }
+                    return el;
+                }
+
+                getTrendText(trend) {
+                    if (currentLanguage === 'fr') {
+                        return trend === 'rising' ? '⬆️' :
+                            trend === 'falling' ? '⬇️' :
+                            '⏸️';
+                    } else {
+                        return trend === 'rising' ? '⬆️' :
+                            trend === 'falling' ? '⬇️' :
+                            '⏸️';
+                    }
+                }
             }
-        }
 
         // Initialiser l'application au chargement de la page
         document.addEventListener('DOMContentLoaded', () => {
