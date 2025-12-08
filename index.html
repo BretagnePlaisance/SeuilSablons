@@ -9,7 +9,7 @@
     class="h-screen overflow-hidden bg-[#0a0a0a] text-white relative"
     style="background-image:
       linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
-      url('src/AdobeStock_527596924.jpeg');
+      url('/AdobeStock_527596924.jpeg');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;"
@@ -19,9 +19,9 @@
     <!-- background fixe -->
     <div
       class="fixed inset-0 -z-10"
-      style="background-image: url('src/AdobeStock_527596924.jpeg');
+      style="background-image: url('/AdobeStock_527596924.jpeg');
              background-size: cover;
-             background-position: center;"
+             background-position: top center;"
     ></div>
 
     <!-- Vague coin (landscape) -->
@@ -34,7 +34,7 @@
       </svg>
       <div class="absolute inset-0 flex items-start justify-start p-4">
         <img
-          src="src/logo_bretagneplaisance.svg"
+          src="/logo_bretagneplaisance.svg"
           alt="Bretagne Plaisance"
           class="h-[90px] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] origin-top-left"
         />
@@ -45,7 +45,7 @@
     <section class="portrait:block hidden relative w-full bg-[#121212] border-b border-white/25">
       <div class="flex items-center justify-center h-[140px] px-6 pt-4">
         <img
-          src="src/logo_bretagneplaisance.svg"
+          src="/logo_bretagneplaisance.svg"
           alt="Bretagne Plaisance"
           class="h-[100px] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]"
         />
@@ -72,14 +72,14 @@
                portrait:px-10 portrait:py-16 portrait:max-w-[500px] portrait:w-full portrait:mb-10
                landscape:px-10 landscape:py-10 landscape:max-w-[500px] landscape:w-full"
       >
-        <div class="text-xl font-bold" x-text="t.waterLevelLabel"></div>
+        <div class="text-xl font-bold mb-5" x-text="t.waterLevelLabel"></div>
 
         <div class="flex flex-row justify-center items-center gap-6">
           <div>
             <div
               class="font-[RegionBretagneNew] text-[3.5rem] sm:text-[4.5rem] portrait:text-[5.5rem]
                      font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]
-                      transition-opacity duration-300"
+                     mb-3 transition-opacity duration-300"
               :class="loading ? 'opacity-50 animate-pulse' : 'opacity-100'"
               x-text="formattedLevel"
             >
@@ -113,7 +113,7 @@
           </div>
         </div>
 
-        <div class="text-lg opacity-90 font-light " x-text="t.unit"></div>
+        <div class="text-lg opacity-90 font-light mt-3" x-text="t.unit"></div>
       </div>
     </main>
 
@@ -124,7 +124,7 @@
       <button
         type="button"
         class="px-2 py-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition
-               font-normal cursor-pointer"
+               font-normal"
         :class="lang === 'fr' ? 'font-bold text-white' : ''"
         @click="setLang('fr')"
       >
@@ -134,7 +134,7 @@
       <button
         type="button"
         class="px-2 py-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition
-               font-normal cursor-pointer"
+               font-normal"
         :class="lang === 'en' ? 'font-bold text-white' : ''"
         @click="setLang('en')"
       >
