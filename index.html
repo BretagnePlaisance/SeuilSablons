@@ -1,685 +1,148 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="fr" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
     <title>Niveau d'Eau - Port des Sablons</title>
-    <style>
-        /* Font */
-        @font-face {
-            font-family: 'RegionBretagneNew';
-            src: url('src/RegionBretagneNew-Regular.ttf') format('truetype');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="src/style.css">
+  </head>
+  <body
+    class="h-screen overflow-hidden bg-[#0a0a0a] text-white relative"
+    style="background-image:
+      linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+      url('src/AdobeStock_527596924.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;"
+    x-data="waterLevelApp"
+    x-init="init()"
+  >
+    <!-- background fixe -->
+    <div
+      class="fixed inset-0 -z-10"
+      style="background-image: url('src/AdobeStock_527596924.jpeg');
+             background-size: cover;
+             background-position: center;"
+    ></div>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'RegionBretagneNew', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0a;
-            /* Image de fond du port avec flou léger */
-            background-image: 
-                linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-                url('src/AdobeStock_527596924.jpeg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: #ffffff;
-            height: 100vh;
-            overflow: hidden;
-            backdrop-filter: blur(1px);
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('src/AdobeStock_527596924.jpeg');
-            background-size: cover;
-            background-position: top center;
-            z-index: -1;
-        }
-
-        /* Sélecteur de langue */
-        .language-selector {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            border-radius: 8px;
-            padding: 8px 12px;
-            z-index: 1000;
-        }
-
-        .language-selector a {
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: normal;
-            padding: 5px 8px;
-            transition: all 0.3s ease;
-            opacity: 0.7;
-        }
-
-        .language-selector a.active {
-            font-weight: bold;
-            opacity: 1;
-            color: #ffffff;
-        }
-
-        .language-selector a:hover {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        /* New: base hidden wave header (enabled in portrait) */
-        .wave-header {
-            display: none;
-        }
-        .wave-header .wave-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 16px 24px 0;
-        }
-        .wave-header .logo {
-            height: 100px;
-            width: auto;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-        }
-        .wave-header .wave {
-            position: absolute;
-            left: 0;
-            bottom: -50px;
-            width: 100%;
-            height: 60px;
-        }
-
-        /* New: inclined corner wave (landscape only) */
-        .corner-wave {
-            display: none;
-        }
-        .corner-wave,
-        .corner-wave svg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 450px;
-            height: 240px;
-        }
-        .corner-wave {
-            z-index: 10;
-            pointer-events: none;
-        }
-        .corner-wave .corner-content {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-start;
-            padding: 18px 20px;
-        }
-        .corner-wave .corner-content .logo {
-            height: 90px;
-            width: auto;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
-            transform-origin: left top;
-        }
-
-        .status.rising {
-        }
-
-        .status.falling {
-        }
-
-        .status.stable {
-        }
-
-
-        /* Styles pour affichage vertical */
-        @media (orientation: portrait) {
-            :root {
-                --wave-height: 140px;
-            }
-
-            /* Show the wave header in portrait */
-            .wave-header {
-                display: block;
-                position: relative;
-                width: 100%;
-                height: var(--wave-height);
-                background: #121212;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-            }
-
-            /* Adjust container height to account for the wave header */
-            .container {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: calc(100vh - var(--wave-height));
-                padding: 20px;
-                max-width: 450px;
-                margin: 0 auto;
-            }
-
-            /* Hide the old card header in portrait */
-            .header {
-                display: none !important;
-            }
-
-            .main-display {
-                background: #121212e0;
-                border-radius: 25px;
-                padding: 60px 40px;
-                border: 2px solid #ffffff;
-                box-shadow: 
-                    0 0 20px rgba(255, 255, 255, 0.5),
-                    inset 0 0 20px rgba(0, 188, 212, 0.1);
-                margin-bottom: 40px;
-                width: 500px;
-                max-width: 500px;
-                position: relative;
-            }
-
-            .label {
-                font-size: 1.5rem;
-                color: #ffffff;
-                text-align: center;
-                margin-bottom: 20px;
-                font-weight: bold;
-            }
-
-            .level {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-around;
-            }
-
-            .water-level {
-                font-size: 5.5rem;
-                font-weight: bold;
-                color: #ffffff;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-                margin-bottom: 15px;
-                font-family: 'RegionBretagneNew';
-                text-align: center;
-            }
-
-            .unit {
-                font-size: 1.8rem;
-                color: #ffffff;
-                opacity: 0.9;
-                font-weight: 300;
-                text-align: center;
-            }
-
-            .info-panel {
-                background: #121212;
-                padding: 25px;
-                border-radius: 15px;
-                border: 1px solid #ffffff;
-                width: 100%;
-                max-width: 400px;
-            }
-
-            .timestamp {
-                font-size: 1.3rem;
-                opacity: 0.9;
-                margin-bottom: 20px;
-                text-align: center;
-                color: #ffffff;
-            }
-
-            .status {
-                padding: 15px 30px;
-                color: #ffffff;
-                text-align: center;
-                font-weight: 500;
-            }
-        }
-
-        /* Styles pour affichage horizontal */
-        @media (orientation: landscape) {
-            /* Show corner wave in landscape */
-            .corner-wave { display: block; }
-
-            /* Hide the old card header in landscape */
-            .header { display: none !important; }
-
-            /* Simplify grid to keep main panel centered */
-            .container {
-                display: grid;
-                grid-template-columns: 1fr;
-                height: 100vh;
-                padding: 20px;
-                gap: 30px;
-                align-items: center;
-                justify-items: center;
-                max-width: 1200px;
-                margin: 0 auto;
-            }
-
-            .main-display {
-                background: #121212e0;
-                border-radius: 25px;
-                padding: 40px;
-                border: 2px solid #ffffff;
-                box-shadow: 
-                    0 0 20px rgba(255, 255, 255, 0.5),
-                    inset 0 0 20px rgba(0, 188, 212, 0.1);
-                text-align: center;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                position: relative;
-                width: 500px;
-                max-width: 500px;
-                justify-self: center;
-            }
-
-            .label {
-                font-size: 1.5rem;
-                color: #ffffff;
-                text-align: center;
-                margin-bottom: 20px;
-                font-weight: bold;
-            }
-
-            .level {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-around;
-            }
-
-            .water-level {
-                font-size: 4.5rem;
-                font-weight: bold;
-                color: #ffffff;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-                margin-bottom: 15px;
-                font-family: 'RegionBretagneNew';
-            }
-
-            .unit {
-                font-size: 1.4rem;
-                color: #ffffff;
-                opacity: 0.9;
-                font-weight: 300;
-            }
-
-            .info-panel {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                text-align: right;
-                background: #121212;
-                padding: 25px;
-                border-radius: 15px;
-                border: 1px solid #ffffff;
-                max-width: 300px;
-                justify-self: center;
-            }
-
-            .timestamp {
-                font-size: 1.1rem;
-                opacity: 0.9;
-                margin-bottom: 20px;
-                color: #ffffff;
-            }
-
-            .status {
-                padding: 12px 24px;
-                color: #ffffff;
-                text-align: center;
-                font-weight: 500;
-            }
-        }
-
-        /* Pour les très grands écrans */
-        @media (min-width: 1400px) {
-            .container {
-                max-width: 1400px;
-            }
-            
-            .header {
-                max-width: 350px;
-            }
-            
-            .main-display {
-                max-width: 600px;
-            }
-            
-            .info-panel {
-                max-width: 350px;
-            }
-        }
-
-        .loading {
-            opacity: 0.5;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.3; }
-            50% { opacity: 1; }
-            100% { opacity: 0.3; }
-        }
-
-        .error {
-            color: #ff5252;
-            background: rgba(255, 82, 82, 0.2);
-            border: 1px solid #ff5252;
-            box-shadow: 0 0 15px rgba(255, 82, 82, 0.3);
-        }
-
-        /* Animation d'apparition */
-        .fade-in {
-            animation: fadeIn 1.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-</head>
-<body>
-    <!-- New: inclined corner wave with logo for landscape -->
-    <div class="corner-wave" aria-hidden="true">
-        <svg viewBox="0 0 340 240" preserveAspectRatio="none">
-            <path fill="#121212" d="M0,0 L340,0 C300,60 250,75 200,105 C145,138 85,180 0,240 Z"></path>
-        </svg>
-        <div class="corner-content">
-            <img src="src/logo_bretagneplaisance.svg" alt="Bretagne Plaisance" class="logo">
-        </div>
+    <!-- Vague coin (landscape) -->
+    <div
+      class="hidden landscape:block fixed top-0 left-0 w-[450px] h-[240px] pointer-events-none z-10"
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 340 240" preserveAspectRatio="none" class="absolute inset-0 w-full h-full">
+        <path fill="#121212" d="M0,0 L340,0 C300,60 250,75 200,105 C145,138 85,180 0,240 Z"></path>
+      </svg>
+      <div class="absolute inset-0 flex items-start justify-start p-4">
+        <img
+          src="src/logo_bretagneplaisance.svg"
+          alt="Bretagne Plaisance"
+          class="h-[90px] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] origin-top-left"
+        />
+      </div>
     </div>
 
-    <!-- New: wave-shaped header for portrait -->
-    <section class="wave-header">
-        <div class="wave-content">
-            <img src="src/logo_bretagneplaisance.svg" alt="Bretagne Plaisance" class="logo">
-        </div>
-        <!-- Wavy bottom edge -->
-        <svg class="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
-            <path fill="#121212" d="M0,40 C180,90 360,10 540,40 C720,70 900,120 1080,90 C1260,60 1440,35 1440,35 L1440,0 L0,0 Z"></path>
-        </svg>
+    <!-- Header vague (portrait) -->
+    <section class="portrait:block hidden relative w-full bg-[#121212] border-b border-white/25">
+      <div class="flex items-center justify-center h-[140px] px-6 pt-4">
+        <img
+          src="src/logo_bretagneplaisance.svg"
+          alt="Bretagne Plaisance"
+          class="h-[100px] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+        />
+      </div>
+      <svg class="absolute left-0 bottom-[-50px] w-full h-[60px]" viewBox="0 0 1440 120"
+           preserveAspectRatio="none" aria-hidden="true">
+        <path fill="#121212"
+              d="M0,40 C180,90 360,10 540,40 C720,70 900,120 1080,90 C1260,60 1440,35 1440,35 L1440,0 L0,0 Z">
+        </path>
+      </svg>
     </section>
 
-    <div class="container fade-in">
-        <!-- Old header kept for code history, now hidden in landscape by CSS -->
-        <div class="header">
-            <img src="src/logo_bretagneplaisance.svg" alt="Bretagne Plaisance" class="logo">
-        </div>
+    <!-- Contenu principal -->
+    <main
+      class="fade-in
+             portrait:h-[calc(100vh-140px)] portrait:flex portrait:flex-col portrait:items-center portrait:justify-center
+             portrait:max-w-[450px] portrait:mx-auto portrait:p-5
+             landscape:grid landscape:grid-cols-1 landscape:place-items-center landscape:h-screen landscape:max-w-[1200px] landscape:mx-auto landscape:p-5"
+    >
+      <div
+        class="relative bg-[#121212e0] border-2 border-white rounded-[25px]
+               shadow-[0_0_20px_rgba(255,255,255,0.5),inset_0_0_20px_rgba(0,188,212,0.1)]
+               flex flex-col justify-center text-center
+               portrait:px-10 portrait:py-16 portrait:max-w-[500px] portrait:w-full portrait:mb-10
+               landscape:px-10 landscape:py-10 landscape:max-w-[500px] landscape:w-full"
+      >
+        <div class="text-xl font-bold" x-text="t.waterLevelLabel"></div>
 
-        <div class="main-display">
-            <div class="label" id="waterLevelLabel">Hauteur d'eau au dessus du seuil</div>
-            <div class="level">
-                <div class="water-level" id="waterLevel">--,--</div>
+        <div class="flex flex-row justify-center items-center gap-6">
+          <div>
+            <div
+              class="font-[RegionBretagneNew] text-[3.5rem] sm:text-[4.5rem] portrait:text-[5.5rem]
+                     font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]
+                      transition-opacity duration-300"
+              :class="loading ? 'opacity-50 animate-pulse' : 'opacity-100'"
+              x-text="formattedLevel"
+            >
             </div>
-            <div class="unit" id="unit">mètres</div>
+          </div>
+
+          <!-- statut / flèche tendance -->
+          <div x-show="trendReady" class="flex items-center justify-center">
+            <template x-if="trend === 'rising'">
+              <svg width="64" height="64" viewBox="0 0 32 32" fill="none"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 28V6M16 6L8 14M16 6L24 14"
+                      stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </template>
+            <template x-if="trend === 'falling'">
+              <svg width="64" height="64" viewBox="0 0 32 32" fill="none"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 4v22M16 26l8-8M16 26l-8-8"
+                      stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </template>
+            <template x-if="trend === 'stable'">
+              <svg width="64" height="64" viewBox="0 0 32 32" fill="none"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 16h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M24 16l-4-4M24 16l-4 4"
+                      stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </template>
+          </div>
         </div>
+
+        <div class="text-lg opacity-90 font-light " x-text="t.unit"></div>
+      </div>
+    </main>
+
+    <!-- Sélecteur langue -->
+    <div
+      class="fixed bottom-5 right-5 z-50 rounded-lg px-3 py-2 bg-black/40 backdrop-blur border border-white/10 text-sm flex items-center gap-1"
+    >
+      <button
+        type="button"
+        class="px-2 py-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition
+               font-normal cursor-pointer"
+        :class="lang === 'fr' ? 'font-bold text-white' : ''"
+        @click="setLang('fr')"
+      >
+        FR
+      </button>
+      <span class="text-white mx-1">|</span>
+      <button
+        type="button"
+        class="px-2 py-1 rounded text-white/70 hover:text-white hover:bg-white/10 transition
+               font-normal cursor-pointer"
+        :class="lang === 'en' ? 'font-bold text-white' : ''"
+        @click="setLang('en')"
+      >
+        EN
+      </button>
     </div>
 
-    <!-- Sélecteur de langue -->
-    <div class="language-selector">
-        <a href="#" id="frLink" class="active" onclick="changeLanguage('fr')">FR</a>
-        <span style="color: rgb(255, 255, 255); margin: 0 5px;">|</span>
-        <a href="#" id="enLink" onclick="changeLanguage('en')">EN</a>
-    </div>
-
-    <script>
-        // Traductions
-        const translations = {
-            fr: {
-                title: "Niveau d'Eau - Port des Sablons",
-                waterLevelLabel: "Hauteur d'eau au dessus du seuil",
-                unit: "mètres",
-                dataUnavailable: "Données indisponibles",
-                error: "ERREUR"
-            },
-            en: {
-                title: "Water Level - Port des Sablons",
-                waterLevelLabel: "Water level on the sill",
-                unit: "meters",
-                dataUnavailable: "Data unavailable",
-                error: "ERROR"
-            }
-        };
-
-        let currentLanguage = 'fr';
-
-        function changeLanguage(lang) {
-            currentLanguage = lang;
-            
-            // Mettre à jour le titre de la page
-            document.title = translations[currentLanguage].title;
-
-            // Mettre à jour le texte de l'étiquette
-            document.getElementById('waterLevelLabel').textContent = translations[currentLanguage].waterLevelLabel;
-            
-            // Mettre à jour l'unité
-            document.getElementById('unit').textContent = translations[currentLanguage].unit;
-            
-            // Mettre à jour les classes actives des liens
-            document.getElementById('frLink').classList.toggle('active', lang === 'fr');
-            document.getElementById('enLink').classList.toggle('active', lang === 'en');
-            
-            // Sauvegarder la préférence
-            localStorage.setItem('language', currentLanguage);
-
-        }
-
-        // Charger la langue sauvegardée
-        function loadSavedLanguage() {
-            const saved = localStorage.getItem('language');
-            if (saved && translations[saved]) {
-                changeLanguage(saved);
-            }
-        }
-
-            class WaterLevelDisplay {
-                constructor() {
-                    this.apiUrl = 'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value';
-                    this.updateInterval = 30000; // 30 secondes
-                    this.levelHistory = []; // ⬅️ Stocke les derniers niveaux
-                    this.maxHistoryLength = 20; // ⬅️ Augmenté à 20 points pour plus de précision
-                    this.init();
-                }
-
-                init() {
-                    this.updateDisplay();
-                    setInterval(() => this.updateDisplay(), this.updateInterval);
-                }
-
-                async fetchData() {
-                    try {
-                        const payload = [
-                            {"hmi_id": 168069, "type": "Float", "name": "NIVEAU_MER"},
-                            {"hmi_id": 168069, "type": "Int", "name": "Jour"},
-                            {"hmi_id": 168069, "type": "Int", "name": "mois"},
-                            {"hmi_id": 168069, "type": "Int", "name": "Annee"},
-                            {"hmi_id": 168069, "type": "Int", "name": "Heure"},
-                            {"hmi_id": 168069, "type": "Int", "name": "Minute"}
-                        ];
-
-                        const response = await fetch(this.apiUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(payload)
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-
-                        const data = await response.json();
-                        return this.parseData(data);
-                    } catch (error) {
-                        console.error('Erreur lors de la récupération des données:', error);
-                        return null;
-                    }
-                }
-
-                parseData(data) {
-                    try {
-                        const niveauMer = data.d.find(item => item.name === 'NIVEAU_MER');
-                        const jour = data.d.find(item => item.name === 'Jour');
-                        const mois = data.d.find(item => item.name === 'mois');
-                        const annee = data.d.find(item => item.name === 'Annee');
-                        const heure = data.d.find(item => item.name === 'Heure');
-                        const minute = data.d.find(item => item.name === 'Minute');
-
-                        if (!niveauMer || !jour || !mois || !annee || !heure || !minute) {
-                            throw new Error('Données manquantes dans la réponse API');
-                        }
-
-                        return {
-                            niveau: parseFloat(niveauMer.values[0].value),
-                            date: {
-                                jour: parseInt(jour.values[0].value),
-                                mois: parseInt(mois.values[0].value),
-                                annee: parseInt(annee.values[0].value),
-                                heure: parseInt(heure.values[0].value),
-                                minute: parseInt(minute.values[0].value)
-                            }
-                        };
-                    } catch (error) {
-                        console.error('Erreur lors du parsing des données:', error);
-                        return null;
-                    }
-                }
-
-                formatTimestamp(date) {
-                    return `${date.jour.toString().padStart(2, '0')}/${date.mois.toString().padStart(2, '0')}/${date.annee} à ${date.heure.toString().padStart(2, '0')}h${date.minute.toString().padStart(2, '0')}`;
-                }
-
-                analyzeTrend(history) {
-                    if (history.length < 20) return 'stable';  // Attend au moins 20 points
-                    const diff = history[history.length - 1] - history[0];  // Différence entre plus ancienne et plus récente
-                    if (diff > 0.01) return 'rising';
-                    if (diff < -0.01) return 'falling';
-                    return 'stable';
-                }
-
-                getTrendSVG(trend) {
-                    if (trend === 'rising') {
-                        // Flèche montante blanche
-                        return `<svg width="64" height="64" viewBox="0 0 32 32" style="vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16 28V6M16 6L8 14M16 6L24 14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>`;
-                    } else if (trend === 'falling') {
-                        // Flèche descendante blanche
-                        return `<svg width="64" height="64" viewBox="0 0 32 32" style="vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16 4v22M16 26l8-8M16 26l-8-8" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>`;
-                    } else {
-                        // Flèche horizontale blanche
-                        return `<svg width="64" height="64" viewBox="0 0 32 32" style="vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 16h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-                            <path d="M24 16l-4-4M24 16l-4 4" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>`;
-                    }
-                }
-
-                formatLevel(value) {
-                    // Formatage localisé : virgule pour FR, point pour EN
-                    const locale = currentLanguage === 'fr' ? 'fr-FR' : 'en-US';
-                    return value.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-
-                async updateDisplay() {
-                    const waterLevelElement = document.getElementById('waterLevel');
-
-                    waterLevelElement.classList.add('loading');
-                    
-                    const data = await this.fetchData();
-
-                    if (data) {
-                        const exactLevel = data.niveau;
-                        const currentLevel = parseFloat(data.niveau.toFixed(2));
-                        waterLevelElement.textContent = this.formatLevel(currentLevel);  // Formatage appliqué
-
-                        // Met à jour l'historique
-                        this.levelHistory.push(exactLevel);
-                        if (this.levelHistory.length > this.maxHistoryLength) {
-                            this.levelHistory.shift();
-                        }
-
-                        // Debug: Afficher la longueur de l'historique
-                        console.log('Historique longueur:', this.levelHistory.length, 'Valeurs:', this.levelHistory);
-
-                        if (this.levelHistory.length >= 20) {  // Changé à >=20 pour attendre 20 requêtes
-                            const statusElement = this.ensureStatusElement();  // Créé seulement ici
-                            const trend = this.analyzeTrend(this.levelHistory);
-                            statusElement.innerHTML = this.getTrendSVG(trend);
-                            statusElement.className = 'status ' + trend;
-                        }
-                    } else {
-                        waterLevelElement.textContent = translations[currentLanguage].error;
-                    }
-
-                    waterLevelElement.classList.remove('loading');
-                }
-
-                ensureStatusElement() {
-                    let el = document.querySelector('.status');
-                    if (!el) {
-                        const container = document.querySelector('.level');
-                        el = document.createElement('div');
-                        el.className = 'status';
-                        el.textContent = '';
-                        container.appendChild(el);
-                    }
-                    return el;
-                }
-
-                getTrendText(trend) {
-                    if (currentLanguage === 'fr') {
-                        return trend === 'rising' ? '⬆️' :
-                            trend === 'falling' ? '⬇️' :
-                            '⏸️';
-                    } else {
-                        return trend === 'rising' ? '⬆️' :
-                            trend === 'falling' ? '⬇️' :
-                            '⏸️';
-                    }
-                }
-            }
-
-        // Initialiser l'application au chargement de la page
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSavedLanguage();
-            window.waterLevelDisplay = new WaterLevelDisplay();
-
-            // Ajout du switch automatique après 7,5 secondes si la langue est fr
-            setInterval(() => {
-                if (currentLanguage === 'fr') {
-                    changeLanguage('en');
-                } else {
-                    changeLanguage('fr');
-                }
-            }, 7500);
-        });
-
-        // Gestion de l'orientation pour les animations
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                document.body.style.height = '100vh';
-            }, 500);
-        });
-    </script>
-</body>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>

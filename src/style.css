@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'RegionBretagneNew';
+  src: url('RegionBretagneNew-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
