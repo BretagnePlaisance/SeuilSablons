@@ -1,15 +1,27 @@
 import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
-import { viteSingleFile } from 'vite-plugin-singlefile'
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    viteSingleFile(),
-  ],
   base: './',
   build: {
+    target: 'es2015',
     cssCodeSplit: false,
-    assetsInlineLimit: 100000000,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+      },
+      format: {
+        comments: false,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+        inlineDynamicImports: true,
+        assetFileNames: 'assets/[name].[ext]',
+        chunkFileNames: 'assets/[name].js',
+        entryFileNames: 'assets/[name].js',
+      },
+    },
   },
 })
