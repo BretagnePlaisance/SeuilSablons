@@ -1,26 +1,16 @@
 import { defineConfig } from 'vite'
+import { viteSingleFile } from 'vite-plugin-singlefile'
 
 export default defineConfig({
   base: './',
+  plugins: [viteSingleFile()],
   build: {
     target: 'es2015',
     cssCodeSplit: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: false,
-      },
-      format: {
-        comments: false,
-      },
-    },
+    assetsInlineLimit: 100000000,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
         inlineDynamicImports: true,
-        assetFileNames: 'assets/[name].[ext]',
-        chunkFileNames: 'assets/[name].js',
-        entryFileNames: 'assets/[name].js',
       },
     },
   },

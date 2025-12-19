@@ -1,4 +1,3 @@
-import './polyfills.js'
 import './style.css'
 import Alpine from 'alpinejs'
 
