@@ -1,8 +1,6 @@
 import './style.css'
 import Alpine from 'alpinejs'
 
-window.Alpine = Alpine
-
 const API_URL =
   'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value'
 
@@ -29,7 +27,8 @@ function formatLevel(value, lang) {
   })
 }
 
-Alpine.data('waterLevelApp', () => ({
+// Définir le composant Alpine AVANT de l'exposer à window
+const waterLevelApp = () => ({
   lang: 'fr',
   t: translations.fr,
   value: null,
@@ -131,6 +130,11 @@ Alpine.data('waterLevelApp', () => ({
       this.loading = false
     }
   },
-}))
+})
+
+window.Alpine = Alpine
+window.waterLevelApp = waterLevelApp
+
+Alpine.data('waterLevelApp', waterLevelApp)
 
 Alpine.start()
