@@ -27,114 +27,114 @@ function formatLevel(value, lang) {
   })
 }
 
-// Définir le composant Alpine AVANT de l'exposer à window
-const waterLevelApp = () => ({
-  lang: 'fr',
-  t: translations.fr,
-  value: null,
-  formattedLevel: '--,--',
-  loading: false,
-  levelHistory: [],
-  maxHistoryLength: 20,
-  trend: 'stable',
-
-  get trendReady() {
-    return this.levelHistory.length >= this.maxHistoryLength
-  },
-
-  init() {
-    // langue sauvegardée
-    const saved = localStorage.getItem('language')
-    if (saved && translations[saved]) {
-      this.lang = saved
-      this.t = translations[this.lang]
-      document.title = this.t.title
-    } else {
-      document.title = this.t.title
-    }
-
-    // fetch initial
-    this.updateDisplay()
-    setInterval(() => this.updateDisplay(), 30000)
-
-    // switch auto
-    setInterval(() => {
-      this.setLang(this.lang === 'fr' ? 'en' : 'fr')
-    }, 7500)
-  },
-
-  setLang(newLang) {
-    if (!translations[newLang]) return
-    this.lang = newLang
-    this.t = translations[newLang]
-    document.title = this.t.title
-    localStorage.setItem('language', this.lang)
-
-    if (this.value != null) {
-      this.formattedLevel = formatLevel(this.value, this.lang)
-    }
-  },
-
-  async fetchData() {
-    const payload = [
-      { hmi_id: 168069, type: 'Float', name: 'NIVEAU_MER' },
-      { hmi_id: 168069, type: 'Int', name: 'Jour' },
-      { hmi_id: 168069, type: 'Int', name: 'mois' },
-      { hmi_id: 168069, type: 'Int', name: 'Annee' },
-      { hmi_id: 168069, type: 'Int', name: 'Heure' },
-      { hmi_id: 168069, type: 'Int', name: 'Minute' },
-    ]
-
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-    const data = await res.json()
-    const d = data.d || []
-
-    const niveauMer = d.find((i) => i.name === 'NIVEAU_MER')
-    if (!niveauMer) throw new Error('Donnée NIVEAU_MER manquante')
-
-    return parseFloat(niveauMer.values[0].value)
-  },
-
-  analyzeTrend() {
-    if (this.levelHistory.length < this.maxHistoryLength) return 'stable'
-    const diff =
-      this.levelHistory[this.levelHistory.length - 1] - this.levelHistory[0]
-    if (diff > 0.01) return 'rising'
-    if (diff < -0.01) return 'falling'
-    return 'stable'
-  },
-
-  async updateDisplay() {
-    this.loading = true
-    try {
-      const exact = await this.fetchData()
-      this.value = parseFloat(exact.toFixed(2))
-      this.formattedLevel = formatLevel(this.value, this.lang)
-
-      this.levelHistory.push(exact)
-      if (this.levelHistory.length > this.maxHistoryLength) {
-        this.levelHistory.shift()
-      }
-      this.trend = this.analyzeTrend()
-    } catch (e) {
-      console.error(e)
-      this.formattedLevel = this.t.error
-    } finally {
-      this.loading = false
-    }
-  },
-})
-
+// Exposer window.Alpine AVANT de définir les composants
 window.Alpine = Alpine
-window.waterLevelApp = waterLevelApp
 
-Alpine.data('waterLevelApp', waterLevelApp)
+// Définir le composant et l'exposer à window
+window.waterLevelApp = function() {
+  return {
+    lang: 'fr',
+    t: translations.fr,
+    value: null,
+    formattedLevel: '--,--',
+    loading: false,
+    levelHistory: [],
+    maxHistoryLength: 20,
+    trend: 'stable',
 
+    get trendReady() {
+      return this.levelHistory.length >= this.maxHistoryLength
+    },
+
+    init: function() {
+      const saved = localStorage.getItem('language')
+      if (saved && translations[saved]) {
+        this.lang = saved
+        this.t = translations[this.lang]
+        document.title = this.t.title
+      } else {
+        document.title = this.t.title
+      }
+
+      this.updateDisplay()
+      const self = this
+      setInterval(function() { self.updateDisplay() }, 30000)
+      setInterval(function() {
+        self.setLang(self.lang === 'fr' ? 'en' : 'fr')
+      }, 7500)
+    },
+
+    setLang: function(newLang) {
+      if (!translations[newLang]) return
+      this.lang = newLang
+      this.t = translations[newLang]
+      document.title = this.t.title
+      localStorage.setItem('language', newLang)
+
+      if (this.value != null) {
+        this.formattedLevel = formatLevel(this.value, this.lang)
+      }
+    },
+
+    fetchData: function() {
+      const self = this
+      const payload = [
+        { hmi_id: 168069, type: 'Float', name: 'NIVEAU_MER' },
+        { hmi_id: 168069, type: 'Int', name: 'Jour' },
+        { hmi_id: 168069, type: 'Int', name: 'mois' },
+        { hmi_id: 168069, type: 'Int', name: 'Annee' },
+        { hmi_id: 168069, type: 'Int', name: 'Heure' },
+        { hmi_id: 168069, type: 'Int', name: 'Minute' },
+      ]
+
+      return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status)
+        return res.json()
+      }).then(function(data) {
+        const d = data.d || []
+        const niveauMer = d.find(function(i) { return i.name === 'NIVEAU_MER' })
+        if (!niveauMer) throw new Error('Donnée NIVEAU_MER manquante')
+        return parseFloat(niveauMer.values[0].value)
+      })
+    },
+
+    analyzeTrend: function() {
+      if (this.levelHistory.length < this.maxHistoryLength) return 'stable'
+      const diff = this.levelHistory[this.levelHistory.length - 1] - this.levelHistory[0]
+      if (diff > 0.01) return 'rising'
+      if (diff < -0.01) return 'falling'
+      return 'stable'
+    },
+
+    updateDisplay: function() {
+      const self = this
+      this.loading = true
+      
+      this.fetchData().then(function(exact) {
+        self.value = parseFloat(exact.toFixed(2))
+        self.formattedLevel = formatLevel(self.value, self.lang)
+        self.levelHistory.push(exact)
+        
+        if (self.levelHistory.length > self.maxHistoryLength) {
+          self.levelHistory.shift()
+        }
+        self.trend = self.analyzeTrend()
+        self.loading = false
+      }).catch(function(e) {
+        console.error(e)
+        self.formattedLevel = self.t.error
+        self.loading = false
+      })
+    }
+  }
+}
+
+// Enregistrer le composant
+Alpine.data('waterLevelApp', window.waterLevelApp)
+
+// Démarrer Alpine
 Alpine.start()
