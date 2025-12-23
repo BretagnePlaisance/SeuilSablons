@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Niveau d'Eau - Sablons</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: #f5f5f5;
+      }
+      .container {
+        text-align: center;
+        padding: 2rem;
+      }
+      .level-value {
+        font-size: 6rem;
+        font-weight: 700;
+        color: #121212;
+        line-height: 1;
+      }
+      .unit {
+        font-size: 1.5rem;
+        color: #666;
+        margin-top: 0.5rem;
+      }
+      .loading {
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="level-value" id="levelValue">--,--</div>
+      <div class="unit" id="unitText">mètres</div>
+    </div>
+
+    <script>
+      (function() {
+        'use strict';
+
+        var API_URL = 'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value';
+        
+        var translations = {
+          fr: { unit: 'mètres', error: 'ERREUR' },
+          en: { unit: 'meters', error: 'ERROR' }
+        };
+        
+        var currentLang = 'fr';
+        var levelValue = null;
+        var levelElement = document.getElementById('levelValue');
+        var unitElement = document.getElementById('unitText');
+
+        function formatLevel(value, lang) {
+          var locale = lang === 'fr' ? 'fr-FR' : 'en-US';
+          return value.toLocaleString(locale, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+        }
+
+        function setLang(lang) {
+          currentLang = lang;
+          unitElement.textContent = translations[lang].unit;
+          if (levelValue !== null) {
+            levelElement.textContent = formatLevel(levelValue, lang);
+          }
+        }
+
+        function fetchData() {
+          levelElement.classList.add('loading');
+          
+          var payload = [
+            { hmi_id: 168069, type: 'Float', name: 'NIVEAU_MER' }
+          ];
+
+          fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function(data) {
+            var d = data.d || [];
+            var niveauMer = d.find(function(i) { return i.name === 'NIVEAU_MER'; });
+            if (!niveauMer) throw new Error('Donnée manquante');
+            
+            var value = parseFloat(niveauMer.values[0].value);
+            levelValue = parseFloat(value.toFixed(2));
+            levelElement.textContent = formatLevel(levelValue, currentLang);
+            levelElement.classList.remove('loading');
+          })
+          .catch(function(e) {
+            console.error(e);
+            levelElement.textContent = translations[currentLang].error;
+            levelElement.classList.remove('loading');
+          });
+        }
+
+        setLang('fr');
+        fetchData();
+        
+        setInterval(fetchData, 30000);
+        
+        setInterval(function() {
+          setLang(currentLang === 'fr' ? 'en' : 'fr');
+        }, 7500);
+      })();
+    </script>
+  </body>
+</html>
