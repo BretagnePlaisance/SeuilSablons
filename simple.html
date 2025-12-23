@@ -22,6 +22,12 @@
         text-align: center;
         padding: 2rem;
       }
+      .label {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
       .level-value {
         font-size: 6rem;
         font-weight: 700;
@@ -40,6 +46,7 @@
   </head>
   <body>
     <div class="container">
+      <div class="label" id="labelText">Hauteur au dessus du seuil</div>
       <div class="level-value" id="levelValue">--,--</div>
       <div class="unit" id="unitText">mètres</div>
     </div>
@@ -51,12 +58,21 @@
         var API_URL = 'https://www.weincloud.net/dashboard/api/v2/published-dashboard/dc0b7a15-e32e-4dee-b193-8247579b656f/addresstag/get/value';
         
         var translations = {
-          fr: { unit: 'mètres', error: 'ERREUR' },
-          en: { unit: 'meters', error: 'ERROR' }
+          fr: { 
+            label: 'Hauteur au dessus du seuil',
+            unit: 'mètres', 
+            error: 'ERREUR' 
+          },
+          en: { 
+            label: 'Water level on the sill',
+            unit: 'meters', 
+            error: 'ERROR' 
+          }
         };
         
         var currentLang = 'fr';
         var levelValue = null;
+        var labelElement = document.getElementById('labelText');
         var levelElement = document.getElementById('levelValue');
         var unitElement = document.getElementById('unitText');
 
@@ -70,6 +86,7 @@
 
         function setLang(lang) {
           currentLang = lang;
+          labelElement.textContent = translations[lang].label;
           unitElement.textContent = translations[lang].unit;
           if (levelValue !== null) {
             levelElement.textContent = formatLevel(levelValue, lang);
